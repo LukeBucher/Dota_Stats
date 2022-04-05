@@ -7,22 +7,21 @@ from sqlite3 import Error
 
 
 def init_api_call():
-    match_details = requests.get("https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/V001/?min_players=10&format=JSON&key"
+    matches = requests.get("https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/V001/?min_players=10&format=JSON&key"
                          "=451D543693942BB6C22FC75AC47E3256")
-    request_json = json.loads(match_details.text)
-    with open('../results.json', 'w') as outfile:
-        for game in request_json["result"]["matches"]:
-            request_string = "http://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v001/?match_id={match}&key=451D543693942BB6C22FC75AC47E3256".format(match = str(game["match_id"]))
-            player_flag = True
-            match_specifics = json.loads(requests.get(request_string).text)
-            for player in match_specifics["result"]["players"]:
-                if player["leaver_status"] > 1:
-                    player_flag = False
-                    break
-            if player_flag:
-                json.dump(match_specifics, outfile,indent=2)
+    request_json = json.loads(matches.text)
+    for game in request_json["result"]["matches"]:
+        request_string = "http://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v001/?match_id={match}&key=451D543693942BB6C22FC75AC47E3256".format(match = str(game["match_id"]))
+        player_flag = True
+        match_details = json.loads(requests.get(request_string).text)
+        for player in match_details["result"]["players"]:
+            if player["leaver_status"] > 1:
+                player_flag = False
+                break
+        if player_flag:
+            print(match_details)
 
-            #TODO Dict with needed info and cleaned matches
+        #TODO Dict with needed info and cleaned matches
     return 0
 
 
@@ -46,7 +45,7 @@ def database_connection(database):
 
 
 def get_last_match_ID(cursor):
-    cursor.execute("Select ")
+    cursor.execute("Select * FROM matches ORDER BY date_start DESC LIMIT 1 ")
 
 def close_connection(cursor):
     cursor.connection.commit()
@@ -76,4 +75,4 @@ def main():
 
 
 
-main()
+init_api_call()
