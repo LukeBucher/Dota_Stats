@@ -2,10 +2,10 @@ import requests
 import json
 import sqlite3 as sql
 from sqlite3 import Error
-from django.db  import models
+
 #Key 451D543693942BB6C22FC75AC47E3256
 
-def init_api_call():
+def init_api_call(): #Start baseline match
     cleaned_match = {}
     matches = requests.get("https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/V001/?min_players=10&format=JSON&key"
                          "=451D543693942BB6C22FC75AC47E3256")
@@ -20,6 +20,7 @@ def init_api_call():
                 player_flag = False
                 break
         if player_flag:
+            #Generate Dictionary from API_CALL
             print(match_details)
             cleaned_match[match_details['match_id']] = {
                 'start_date': match_details['start_time'],
@@ -44,7 +45,10 @@ def init_api_call():
 #TODO Grab init call and compare with current highest match ID from database estimate api calls and add down until backfill is complete
 
 
-def back_fill(last_match_ID,cursor):
+def back_fill(last_match_ID,cursor):  #Test key: 6531080579
+    matches = requests.get("https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/V001/?min_players=10&start_at_match_id =%s&format=JSON&key"
+                         "=451D543693942BB6C22FC75AC47E3256" %(last_match_ID))
+    request_json = json.loads(matches.text)
     return 0
 
     #If no database seen backfill from top down to current "bedrock" match
@@ -91,4 +95,7 @@ def main():
 
 
 main()
+cur = database_connection("matches.db")
+print(get_last_match_ID(cur))
+back_fill(get_last_match_ID(cur),cur)
 
